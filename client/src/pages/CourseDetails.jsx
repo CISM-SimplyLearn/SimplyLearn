@@ -14,9 +14,14 @@ const CourseDetails = () => {
     const [showMaterialModal, setShowMaterialModal] = useState(false);
     const [newMaterial, setNewMaterial] = useState({ title: '', type: 'PDF', url: '' });
 
+    const [isEnrolled, setIsEnrolled] = useState(false);
+
     useEffect(() => {
         fetchCourse();
-    }, [id]);
+        if (user?.role === 'Student') {
+            checkEnrollment();
+        }
+    }, [id, user]);
 
     const fetchCourse = async () => {
         try {
@@ -26,6 +31,25 @@ const CourseDetails = () => {
         } catch (error) {
             console.error(error);
             setLoading(false);
+        }
+    };
+
+    const checkEnrollment = async () => {
+        try {
+            const { data } = await api.get(`/enrollments/check/${id}`);
+            setIsEnrolled(data.enrolled);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleEnroll = async () => {
+        try {
+            await api.post('/enrollments', { course_id: id });
+            setIsEnrolled(true);
+            alert('Enrolled successfully!');
+        } catch (error) {
+            alert('Enrollment failed');
         }
     };
 
@@ -94,7 +118,7 @@ const CourseDetails = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
-                    {activeTab === 'materials' && (
+                    {(isTutor || isEnrolled) && activeTab === 'materials' && (
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
                                 <h2 className="text-2xl font-bold">Course Materials</h2>
@@ -138,7 +162,7 @@ const CourseDetails = () => {
                         </div>
                     )}
 
-                    {activeTab === 'assignments' && (
+                    {(isTutor || isEnrolled) && activeTab === 'assignments' && (
                        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-lg font-bold">Assignments</h3>
@@ -152,7 +176,7 @@ const CourseDetails = () => {
                         </div>
                     )}
 
-                    {activeTab === 'quizzes' && (
+                    {(isTutor || isEnrolled) && activeTab === 'quizzes' && (
                          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-lg font-bold">Quizzes</h3>
@@ -166,7 +190,7 @@ const CourseDetails = () => {
                         </div>
                     )}
 
-                    {activeTab === 'forum' && (
+                    {(isTutor || isEnrolled) && activeTab === 'forum' && (
                         <ForumSection courseId={id} />
                     )}
                 </div>

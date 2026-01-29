@@ -39,6 +39,8 @@ app.use("/api/assignments", require("./routes/assignmentRoutes"));
 app.use("/api/submissions", require("./routes/submissionRoutes"));
 app.use("/api/quizzes", require("./routes/quizRoutes"));
 app.use("/api/forum", require("./routes/forumRoutes"));
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
+app.use("/api/enrollments", require("./routes/enrollmentRoutes"));
 
 app.get("/", (req, res) => {
   res.send("SimplyLearn API is running...");

@@ -8,6 +8,7 @@ const Login = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('Student');
   const [error, setError] = useState('');
   const { login, register } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const Login = () => {
       if (isLogin) {
         await login(email, password);
       } else {
-        await register(name, email, password, 'Student');
+        await register(name, email, password, role);
       }
       navigate('/');
     } catch (err) {
@@ -47,6 +48,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
+            <>
             <div>
               <label className="block text-gray-300 text-sm font-medium mb-2">Full Name</label>
               <input
@@ -58,6 +60,18 @@ const Login = () => {
                 required={!isLogin}
               />
             </div>
+             <div>
+              <label className="block text-gray-300 text-sm font-medium mb-2">Role</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full bg-black/20 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all cursor-pointer"
+              >
+                <option value="Student">Student</option>
+                <option value="Tutor">Tutor</option>
+              </select>
+            </div>
+            </>
           )}
           <div>
             <label className="block text-gray-300 text-sm font-medium mb-2">Email Address</label>

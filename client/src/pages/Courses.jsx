@@ -12,9 +12,14 @@ const Courses = () => {
   const [newCourse, setNewCourse] = useState({ title: '', description: '' });
   const { user } = useContext(AuthContext);
 
+  const [enrollments, setEnrollments] = useState([]);
+
   useEffect(() => {
     fetchCourses();
-  }, []);
+    if (user?.role === 'Student') {
+        fetchEnrollments();
+    }
+  }, [user]);
 
   const fetchCourses = async () => {
     try {
@@ -25,6 +30,27 @@ const Courses = () => {
       console.error(error);
       setLoading(false);
     }
+  };
+
+  const fetchEnrollments = async () => {
+      try {
+          const { data } = await api.get('/enrollments/my');
+          setEnrollments(data);
+      } catch (error) {
+          console.error(error);
+      }
+  };
+
+  const handleEnroll = async (courseId, e) => {
+      e.preventDefault(); // Prevent Link navigation
+      e.stopPropagation();
+      try {
+          await api.post('/enrollments', { course_id: courseId });
+          fetchEnrollments(); // Refresh
+          alert('Enrolled successfully!');
+      } catch (error) {
+          alert(error.response?.data?.message || 'Enrollment failed');
+      }
   };
 
   const handleCreateCourse = async (e) => {
@@ -76,21 +102,39 @@ const Courses = () => {
         <div className="text-center py-20 text-gray-500">Loading courses...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map(course => (
-            <Link to={`/courses/${course._id}`} key={course._id} className="group">
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6 h-full hover:bg-white/10 transition-colors">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <Book className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-2">{course.title}</h3>
-                <p className="text-gray-400 text-sm line-clamp-3 mb-4">{course.description}</p>
-                <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
-                  <span>{course.tutor_id?.name || 'Unknown Tutor'}</span>
-                  <span>{new Date(course.createdAt).toLocaleDateString()}</span>
-                </div>
+          {filteredCourses.map(course => {
+            const isEnrolled = enrollments.some(e => e.course_id._id === course._id);
+            return (
+              <div key={course._id} className="relative group">
+                <Link to={`/courses/${course._id}`} className="block h-full">
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-6 h-full hover:bg-white/10 transition-colors">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                      <Book className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">{course.title}</h3>
+                    <p className="text-gray-400 text-sm line-clamp-3 mb-4">{course.description}</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
+                      <span>{course.tutor_id?.name || 'Unknown Tutor'}</span>
+                      <span>{new Date(course.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </Link>
+                {user?.role === 'Student' && !isEnrolled && (
+                    <button
+                        onClick={(e) => handleEnroll(course._id, e)}
+                        className="absolute top-6 right-6 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow-lg z-10 transition-colors"
+                    >
+                        Enroll
+                    </button>
+                )}
+                 {user?.role === 'Student' && isEnrolled && (
+                    <span className="absolute top-6 right-6 px-3 py-1 bg-white/10 text-green-400 text-xs font-bold rounded border border-green-500/30 z-10">
+                        Enrolled
+                    </span>
+                )}
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
 

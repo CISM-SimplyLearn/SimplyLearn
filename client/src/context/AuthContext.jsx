@@ -1,5 +1,5 @@
-import { createContext, useState, useEffect } from 'react';
-import api from '../API/api';
+import { createContext, useState, useEffect } from "react";
+import api from "../API/api";
 
 const AuthContext = createContext();
 
@@ -9,16 +9,16 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkLoggedIn = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         try {
-          const { data } = await api.get('/auth/profile');
+          const { data } = await api.get("/auth/profile");
           setUser(data);
         } catch (error) {
           console.error(error);
-          localStorage.removeItem('token');
-          delete api.defaults.headers.common['Authorization'];
+          localStorage.removeItem("token");
+          delete api.defaults.headers.common["Authorization"];
         }
       }
       setLoading(false);
@@ -28,35 +28,42 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    const { data } = await api.post("/auth/login", { email, password });
+    localStorage.setItem("token", data.token);
+    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setUser(data);
     return data;
   };
 
   const register = async (name, email, password, role) => {
-    const { data } = await api.post('/auth/register', { name, email, password, role });
-    localStorage.setItem('token', data.token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    const { data } = await api.post("/auth/register", {
+      name,
+      email,
+      password,
+      role,
+    });
+    localStorage.setItem("token", data.token);
+    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     setUser(data);
     return data;
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
+    localStorage.removeItem("token");
+    delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
   const updateProfile = async (userData) => {
-      const { data } = await api.put('/auth/profile', userData);
-      setUser(data);
-      return data;
+    const { data } = await api.put("/auth/profile", userData);
+    setUser(data);
+    return data;
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, updateProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );

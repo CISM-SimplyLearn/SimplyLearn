@@ -1,47 +1,47 @@
-import { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AuthContext from '../context/AuthContext';
-import { LogIn } from 'lucide-react';
+import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import AuthContext from "../context/AuthContext";
+import { LogIn } from "lucide-react";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Student');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("Student");
+  const [error, setError] = useState("");
   const { login, register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     try {
       if (isLogin) {
         await login(email, password);
       } else {
         await register(name, email, password, role);
       }
-      navigate('/');
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || 'Authentication failed');
+      setError(err.response?.data?.message || "Authentication failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-black p-4">
-      <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-[#0073b0] to-black p-4">
+      <div className="w-full max-w-md p-8 border shadow-2xl bg-white/10 backdrop-blur-lg border-white/20 rounded-2xl">
         <div className="flex justify-center mb-6">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-3 rounded-full">
+          <div className="p-3 rounded-full bg-gradient-to-r from-black-500 to-blue-500">
             <LogIn className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-center text-white mb-8">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
+        <h2 className="mb-8 text-3xl font-bold text-center text-white">
+          {isLogin ? "Welcome Back" : "Create Account"}
         </h2>
-        
+
         {error && (
-          <div className="bg-red-500/20 border border-red-500 text-red-100 p-3 rounded-lg mb-4 text-center">
+          <div className="p-3 mb-4 text-center text-red-100 border border-red-500 rounded-lg bg-red-500/20">
             {error}
           </div>
         )}
@@ -49,66 +49,74 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
             <>
-            <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-black/20 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all placeholder-gray-500"
-                placeholder="Enter your name"
-                required={!isLogin}
-              />
-            </div>
-             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">Role</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full bg-black/20 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all cursor-pointer"
-              >
-                <option value="Student">Student</option>
-                <option value="Tutor">Tutor</option>
-              </select>
-            </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 text-white placeholder-gray-500 transition-all border border-gray-600 rounded-lg bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your name"
+                  required={!isLogin}
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-300">
+                  Role
+                </label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-4 py-3 text-white transition-all border border-gray-600 rounded-lg cursor-pointer bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="Student">Student</option>
+                  <option value="Tutor">Tutor</option>
+                </select>
+              </div>
             </>
           )}
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Email Address</label>
+            <label className="block mb-2 text-sm font-medium text-gray-300">
+              Email Address
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-black/20 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all placeholder-gray-500"
+              className="w-full px-4 py-3 text-white placeholder-gray-500 transition-all border border-gray-600 rounded-lg bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your email"
               required
             />
           </div>
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Password</label>
+            <label className="block mb-2 text-sm font-medium text-gray-300">
+              Password
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black/20 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all placeholder-gray-500"
+              className="w-full px-4 py-3 text-white placeholder-gray-500 transition-all border border-gray-600 rounded-lg bg-black/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your password"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 rounded-lg shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transform hover:scale-[1.02] transition-all duration-200"
           >
-            {isLogin ? 'Sign In' : 'Sign Up'}
+            {isLogin ? "Sign In" : "Sign Up"}
           </button>
         </form>
-        <div className="mt-6 text-center text-gray-400 text-sm">
+        <div className="mt-6 text-sm text-center text-gray-400">
           {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button 
+          <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-purple-400 hover:text-purple-300 cursor-pointer transition-colors font-medium bg-transparent border-none p-0 underline"
+            className="p-0 font-medium text-blue-400 underline transition-colors bg-transparent border-none cursor-pointer hover:text-blue-300"
           >
-            {isLogin ? 'Sign Up' : 'Sign In'}
+            {isLogin ? "Sign Up" : "Sign In"}
           </button>
         </div>
       </div>

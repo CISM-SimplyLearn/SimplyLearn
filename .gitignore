@@ -17,3 +17,7 @@ Desktop.ini
 *.ntvs*
 *.njsproj
 *.sln
+
+.scannerwork
+.sonarlint
+

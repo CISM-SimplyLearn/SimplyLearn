@@ -11,14 +11,12 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = async () => {
       const token = localStorage.getItem("token");
       if (token) {
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         try {
           const { data } = await api.get("/auth/profile");
           setUser(data);
         } catch (error) {
           console.error(error);
           localStorage.removeItem("token");
-          delete api.defaults.headers.common["Authorization"];
         }
       }
       setLoading(false);
@@ -30,9 +28,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", { email, password });
     localStorage.setItem("token", data.token);
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-    setUser(data);
-    return data;
+    // Fetch profile to get full user data if login response is minimal
+    const { data: profile } = await api.get("/auth/profile");
+    setUser(profile);
+    return profile;
   };
 
   const register = async (name, email, password, role) => {
@@ -43,14 +42,13 @@ export const AuthProvider = ({ children }) => {
       role,
     });
     localStorage.setItem("token", data.token);
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-    setUser(data);
-    return data;
+    const { data: profile } = await api.get("/auth/profile");
+    setUser(profile);
+    return profile;
   };
 
   const logout = () => {
     localStorage.removeItem("token");
-    delete api.defaults.headers.common["Authorization"];
     setUser(null);
   };
 

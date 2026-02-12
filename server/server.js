@@ -35,14 +35,14 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/courses", require("./routes/courseRoutes"));
-app.use("/api/assignments", require("./routes/assignmentRoutes"));
-app.use("/api/submissions", require("./routes/submissionRoutes"));
-app.use("/api/quizzes", require("./routes/quizRoutes"));
-app.use("/api/forum", require("./routes/forumRoutes"));
-app.use("/api/dashboard", require("./routes/dashboardRoutes"));
-app.use("/api/enrollments", require("./routes/enrollmentRoutes"));
+app.use("/api/auth", require("./modules/auth/authRoutes"));
+app.use("/api/courses", require("./modules/courses/courseRoutes"));
+app.use("/api/assignments", require("./modules/assignments/assignmentRoutes"));
+app.use("/api/submissions", require("./modules/assignments/submissionRoutes"));
+app.use("/api/quizzes", require("./modules/quizzes/quizRoutes"));
+app.use("/api/forum", require("./modules/engagement/forumRoutes"));
+app.use("/api/dashboard", require("./modules/engagement/dashboardRoutes"));
+app.use("/api/enrollments", require("./modules/engagement/enrollmentRoutes"));
 
 app.get("/", (req, res) => {
   res.send("SimplyLearn API is running...");

@@ -1,4 +1,5 @@
 const ForumPost = require('./ForumPost');
+const sanitizeHtml = require('sanitize-html');
 
 const getPosts = async (req, res) => {
     try {
@@ -14,10 +15,15 @@ const getPosts = async (req, res) => {
 const createPost = async (req, res) => {
     const { course_id, content, parent_post_id } = req.body;
     try {
+        const sanitizedContent = sanitizeHtml(content, {
+            allowedTags: [],
+            allowedAttributes: {},
+        });
+
         const post = await ForumPost.create({
             course_id,
             user_id: req.user.id,
-            content,
+            content: sanitizedContent,
             parent_post_id
         });
         const populatedPost = await ForumPost.findById(post._id).populate('user_id', 'name role');

@@ -20,8 +20,9 @@ const registerUser = async (req, res) => {
     if (typeof email !== "string") {
       return res.status(400).json({ message: "Invalid email" });
     }
-
     const normalizedEmail = email.trim().toLowerCase();
+
+    // Safe email regex (prevents super-linear backtracking)
     const emailRegex = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
     if (!emailRegex.test(normalizedEmail)) {
       return res.status(400).json({ message: "Invalid email format" });
@@ -31,7 +32,7 @@ const registerUser = async (req, res) => {
     const allowedRoles = ["Student", "Tutor", "Admin"];
     const safeRole = allowedRoles.includes(role) ? role : "Student";
 
-    // Query using trusted value only
+    // Check if user already exists 
     const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });

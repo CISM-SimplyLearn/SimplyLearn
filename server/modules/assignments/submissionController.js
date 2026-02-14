@@ -42,7 +42,6 @@ const submitAssignment = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
       return res.status(400).json({ message: "Invalid user id" });
     }
-
     const safeAssignmentId = new mongoose.Types.ObjectId(assignment_id);
     const safeStudentId    = new mongoose.Types.ObjectId(req.user.id);
 
@@ -54,7 +53,7 @@ const submitAssignment = async (req, res) => {
 
     // Sanitize text_entry
     const sanitizedText = text_entry
-      ? sanitizeHtml(text_entry, { allowedTags: [], allowedAttributes: {} })
+      ? sanitizeHtml(text_entry, { allowedTags: [], allowedAttributes: {} }).trim()
       : "";
 
     // Check existing submission
@@ -82,6 +81,7 @@ const submitAssignment = async (req, res) => {
     });
 
     res.status(201).json(submission);
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

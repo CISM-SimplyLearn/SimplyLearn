@@ -51,23 +51,28 @@ const createQuiz = async (req, res) => {
     if (typeof title !== "string" || title.trim() === "") {
       return res.status(400).json({ message: "Invalid quiz title" });
     }
-
     if (!Array.isArray(questions) || questions.length === 0) {
       return res.status(400).json({ message: "Questions must be a non-empty array" });
     }
-
     if (timer_limit !== undefined && typeof timer_limit !== "number") {
       return res.status(400).json({ message: "Invalid timer limit" });
     }
 
-    // Trim title for safety
     const safeTitle = title.trim();
+
+    // Sanitize questions array
+    const sanitizedQuestions = questions.map((q) => ({
+      ...q,
+      question_text: typeof q.question_text === "string" ? q.question_text.trim() : "",
+      options: Array.isArray(q.options) ? q.options.map(opt => String(opt).trim()) : [],
+      correct_answer: typeof q.correct_answer === "string" ? q.correct_answer.trim() : "",
+    }));
 
     // Create quiz using trusted values
     const quiz = await Quiz.create({
       course_id: safeCourseId,
       title: safeTitle,
-      questions,
+      questions: sanitizedQuestions,
       timer_limit
     });
 

@@ -50,11 +50,15 @@ const createAssignment = async (req, res) => {
   const { course_id, title, instructions, deadline, max_points } = req.body;
 
   try {
-    // Validate course_id
+    // Validate course_id and user_id
     if (!mongoose.Types.ObjectId.isValid(course_id)) {
       return res.status(400).json({ message: "Invalid course id" });
     }
     const safeCourseId = new mongoose.Types.ObjectId(course_id);
+
+    if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
     const safeUserId = new mongoose.Types.ObjectId(req.user.id);
 
     // Check if course exists
@@ -64,19 +68,34 @@ const createAssignment = async (req, res) => {
     }
 
     // Check authorization
-    if (course.tutor_id.toString() !== safeUserId.toString() && req.user.role !== "Admin") {
+    if (
+      course.tutor_id.toString() !== safeUserId.toString() &&
+      req.user.role !== "Admin"
+    ) {
       return res.status(403).json({
         message: "Not authorized to add assignments to this course",
       });
     }
 
+    // Validate other fields
+    const safeTitle = typeof title === "string" ? title.trim() : "";
+    const safeInstructions =
+      typeof instructions === "string" ? instructions.trim() : "";
+    const safeDeadline = deadline ? new Date(deadline) : null;
+    const safeMaxPoints =
+      typeof max_points === "number" && max_points >= 0 ? max_points : 0;
+
+    if (!safeTitle) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+
     // Create assignment using trusted values
     const assignment = await Assignment.create({
       course_id: safeCourseId,
-      title,
-      instructions,
-      deadline,
-      max_points,
+      title: safeTitle,
+      instructions: safeInstructions,
+      deadline: safeDeadline,
+      max_points: safeMaxPoints,
     });
 
     res.status(201).json(assignment);

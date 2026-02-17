@@ -84,7 +84,7 @@ const updateCourse = async (req, res) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    if (course.tutor_id.toString() !== req.user.id && req.user.role !== 'Admin') {
+    if (course.tutor_id.toString() !== req.user.id && req.user.role !== 'Tutor') {
       return res.status(403).json({ message: 'Not authorized to update this course' });
     }
 

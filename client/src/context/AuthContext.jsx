@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { createContext, useState, useEffect } from "react";
 import api from "../API/api";
 
@@ -9,15 +10,11 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkLoggedIn = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const { data } = await api.get("/auth/profile");
-          setUser(data);
-        } catch (error) {
-          console.error(error);
-          localStorage.removeItem("token");
-        }
+      try {
+        const { data } = await api.get("/auth/profile");
+        setUser(data);
+      } catch (error) {
+        setUser(null);
       }
       setLoading(false);
     };
@@ -26,9 +23,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post("/auth/login", { email, password });
-    localStorage.setItem("token", data.token);
-    // Fetch profile to get full user data if login response is minimal
+    await api.post("/auth/login", { email, password });
+    // Token is set in cookie by server
+    // Fetch profile to get full user data
     const { data: profile } = await api.get("/auth/profile");
     setUser(profile);
     return profile;
@@ -41,13 +38,16 @@ export const AuthProvider = ({ children }) => {
       password,
       role,
     });
-
     return data;
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.get("/auth/logout");
+      setUser(null);
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   };
 
   const updateProfile = async (userData) => {

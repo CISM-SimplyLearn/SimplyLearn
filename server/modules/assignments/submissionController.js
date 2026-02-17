@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+const sanitizeHtml = require('sanitize-html');
 const Submission = require('./Submission');
 const Assignment = require('./Assignment');
 const multer = require('multer');
@@ -42,9 +44,8 @@ const submitAssignment = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
       return res.status(400).json({ message: "Invalid user id" });
     }
-
     const safeAssignmentId = new mongoose.Types.ObjectId(assignment_id);
-    const safeStudentId    = new mongoose.Types.ObjectId(req.user.id);
+    const safeStudentId = new mongoose.Types.ObjectId(req.user.id);
 
     // Check assignment exists
     const assignment = await Assignment.findById(safeAssignmentId);
@@ -54,7 +55,7 @@ const submitAssignment = async (req, res) => {
 
     // Sanitize text_entry
     const sanitizedText = text_entry
-      ? sanitizeHtml(text_entry, { allowedTags: [], allowedAttributes: {} })
+      ? sanitizeHtml(text_entry, { allowedTags: [], allowedAttributes: {} }).trim()
       : "";
 
     // Check existing submission
@@ -64,7 +65,7 @@ const submitAssignment = async (req, res) => {
     });
 
     if (existingSubmission) {
-      existingSubmission.file_url  = file_url || existingSubmission.file_url;
+      existingSubmission.file_url = file_url || existingSubmission.file_url;
       existingSubmission.text_entry = sanitizedText || existingSubmission.text_entry;
       existingSubmission.submission_date = new Date();
 
@@ -82,6 +83,7 @@ const submitAssignment = async (req, res) => {
     });
 
     res.status(201).json(submission);
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -127,7 +129,7 @@ const getMySubmission = async (req, res) => {
 
     // Normalize into trusted ObjectIds
     const safeAssignmentId = new mongoose.Types.ObjectId(assignmentId);
-    const safeStudentId   = new mongoose.Types.ObjectId(req.user.id);
+    const safeStudentId = new mongoose.Types.ObjectId(req.user.id);
 
     // Build the query only from trusted values
     const submission = await Submission.findOne({
@@ -144,9 +146,16 @@ const getMySubmission = async (req, res) => {
 // @desc    Grade a submission
 const gradeSubmission = async (req, res) => {
   const { grade, feedback } = req.body;
+  const { id } = req.params;
 
   try {
-    const submission = await Submission.findById(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid submission id" });
+    }
+
+    const safeSubmissionId = new mongoose.Types.ObjectId(id);
+
+    const submission = await Submission.findById(safeSubmissionId);
 
     if (!submission) {
       return res.status(404).json({ message: 'Submission not found' });
@@ -167,5 +176,5 @@ module.exports = {
   getSubmissions,
   getMySubmission,
   gradeSubmission,
-  upload 
+  upload
 };

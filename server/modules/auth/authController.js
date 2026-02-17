@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('./User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -20,8 +21,9 @@ const registerUser = async (req, res) => {
     if (typeof email !== "string") {
       return res.status(400).json({ message: "Invalid email" });
     }
-
     const normalizedEmail = email.trim().toLowerCase();
+
+    // Safe email regex (prevents super-linear backtracking)
     const emailRegex = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
     if (!emailRegex.test(normalizedEmail)) {
       return res.status(400).json({ message: "Invalid email format" });
@@ -31,7 +33,7 @@ const registerUser = async (req, res) => {
     const allowedRoles = ["Student", "Tutor", "Admin"];
     const safeRole = allowedRoles.includes(role) ? role : "Student";
 
-    // Query using trusted value only
+    // Check if user already exists 
     const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
@@ -108,42 +110,88 @@ const loginUser = async (req, res) => {
 // @route   GET /api/auth/profile
 // @access  Private
 const getProfile = async (req, res) => {
-  // req.user will be set by middleware
-  const user = await User.findById(req.user.id);
-  if (user) {
-    res.json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      profile_data: user.profile_data
-    });
-  } else {
-    res.status(404).json({ message: 'User not found' });
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    const safeUserId = new mongoose.Types.ObjectId(req.user.id);
+
+    const user = await User.findById(safeUserId);
+    if (user) {
+      res.json({
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profile_data: user.profile_data
+      });
+    } else {
+      res.status(404).json({ message: 'User found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 }
 
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-const updateProfile = async (req, res) => {
-  const user = await User.findById(req.user.id);
 
-  if (user) {
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
+// Helper: sanitize string or return default
+const sanitizeString = (value, defaultValue = "") =>
+  typeof value === "string" ? value.trim() : defaultValue;
+
+// Helper: sanitize array of strings
+const sanitizeStringArray = (arr, defaultValue = []) =>
+  Array.isArray(arr) ? arr.map((s) => String(s).trim()) : defaultValue;
+
+// Helper: validate email safely
+const isValidEmail = (email) => {
+  if (typeof email !== "string") return false;
+  const normalized = email.trim().toLowerCase();
+  const emailRegex = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
+  return emailRegex.test(normalized) ? normalized : false;
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    // Validate user ID
+    if (!mongoose.Types.ObjectId.isValid(req.user.id)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    const safeUserId = new mongoose.Types.ObjectId(req.user.id);
+    const user = await User.findById(safeUserId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update basic fields
+    if (req.body.name !== undefined) user.name = sanitizeString(req.body.name, user.name);
+
+    if (req.body.email !== undefined) {
+      const normalizedEmail = isValidEmail(req.body.email);
+      if (normalizedEmail) user.email = normalizedEmail;
+    }
 
     if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       user.password_hash = await bcrypt.hash(req.body.password, salt);
     }
 
-    if (req.body.profile_data) {
-      user.profile_data = { ...user.profile_data, ...req.body.profile_data };
+    // Update profile_data
+    if (req.body.profile_data && typeof req.body.profile_data === "object") {
+      const { bio, skills, interests } = req.body.profile_data;
+      user.profile_data = {
+        ...user.profile_data,
+        bio: sanitizeString(bio, user.profile_data.bio),
+        skills: sanitizeStringArray(skills, user.profile_data.skills),
+        interests: sanitizeStringArray(interests, user.profile_data.interests),
+      };
     }
 
     const updatedUser = await user.save();
 
+    // Return updated user
     res.json({
       _id: updatedUser.id,
       name: updatedUser.name,
@@ -152,8 +200,8 @@ const updateProfile = async (req, res) => {
       profile_data: updatedUser.profile_data,
       token: generateToken(updatedUser.id),
     });
-  } else {
-    res.status(404).json({ message: 'User not found' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 

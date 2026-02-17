@@ -77,7 +77,7 @@ const Courses = () => {
           <h1 className="text-3xl font-bold">Courses</h1>
           <p className="text-gray-400 mt-2">Explore and manage your learning materials</p>
         </div>
-        {(user?.role === 'Tutor' || user?.role === 'Admin') && (
+        {(user?.role === 'Tutor') && (
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center gap-2 font-bold transition-transform hover:scale-105"
